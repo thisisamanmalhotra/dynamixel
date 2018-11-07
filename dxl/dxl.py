@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
-
+name = 'dxl'
 import glob
 from dynamixel_sdk import *
-from reg import *
+from .reg import *
 
 def get_available_ports():
     '''
@@ -113,4 +113,71 @@ class dxl(object):
                 __ids.append(i)
         return __ids
 
-    
+    def __read(self, DXL_ID, data):
+        """
+        Reads a given value in the control table from the specified motor.
+
+        Args:
+            DXL_ID: Motor ID
+            data: string having data name from control table
+        Returns:
+            Present value at the given position
+        """
+        pos = self._register[data][0]
+        size = self._register[data][1]
+        if size == 1:
+            func = self.packetHandler.read1ByteTxRx
+        elif size == 2:
+            func = self.packetHandler.read2ByteTxRx
+        else:
+            func = self.packetHandler.read4ByteTxRx
+        present_val, dxl_comm, dxl_error = func(self.portHandler, DXL_ID, pos)
+        if not self.error(dxl_comm, dxl_error):
+            return present_val
+        else:
+            return None
+
+
+
+    def __write(self, DXL_ID, data, value):
+        """
+        Reads a given value in the control table from the specified motor.
+
+        Args:
+            DXL_ID: Motor ID
+            data: string having data name from control table
+        Returns:
+            Present value at the given position
+        """
+        pos = self._register[data][0]
+        size = self._register[data][1]
+        if size == 1:
+            func = self.packetHandler.write1ByteTxRx
+        elif size == 2:
+            func = self.packetHandler.write2ByteTxRx
+        else:
+            func = self.packetHandler.write4ByteTxRx
+        present_val, dxl_comm, dxl_error = func(self.portHandler, DXL_ID, pos, value)
+        if not self.error(dxl_comm, dxl_error):
+            return True
+        else:
+            return False
+    def createByteArray(bin_value):
+        byte_array = [DXL_LOBYTE(DXL_LOWORD(bin_value)), DXL_HIBYTE(DXL_LOWORD(bin_value)), DXL_LOBYTE(DXL_HIWORD(bin_value)), DXL_HIBYTE(DXL_HIWORD(bin_value))]
+        return byte_array
+
+    def __sync_write(self, param, ids):
+        pos = self._register[param][0]
+        size = self._register[param][1]
+        groupSyncWrite = GroupSyncWrite(self.portHandler, self.packetHandler, pos, size)
+        for k,v in ids.items():
+            dxl_addparam_result = groupSyncWrite.addParam(k, createByteArray(v))
+            assert dxl_addparam_result, "Group Sync Write Failed"
+        dxl_comm_result = groupSyncWrite.txPacket()
+        assert self.error(dxl_comm_result) == False, "GroupSync Failed"
+
+    def set_goal_position(self, ids):
+        param = "Goal Position"
+        __sync_write(self, param, ids)
+
+
