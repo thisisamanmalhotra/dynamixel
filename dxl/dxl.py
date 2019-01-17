@@ -2,7 +2,7 @@
 name = 'dxl'
 import glob
 from dynamixel_sdk import *
-from .reg import *
+from reg import *
 
 def get_available_ports():
     '''
@@ -30,8 +30,8 @@ class dxl(object):
     def __init__(self, DeviceName, baudrate, protocol = 1, mx = False):
         self.portHandler = PortHandler(DeviceName)
         self._baudrate = baudrate
-        self.packetHandler = PacketHandler(self.PROTOCOL_VERSION)
         self._protocol_version = protocol
+        self.packetHandler = PacketHandler(self.PROTOCOL_VERSION)
 
         try:
             assert self.portHandler.openPort()
@@ -40,7 +40,7 @@ class dxl(object):
             print("Failed to open port")
 
         try:
-            assert self.packetHandler.setBaudRate(self.BAUDRATE)
+            assert self.portHandler.setBaudRate(self.BAUDRATE)
             print("Changed baudrate successfully")
         except AssertionError:
             print("Failed to change baudrate")
@@ -139,7 +139,7 @@ class dxl(object):
 
 
 
-    def __write(self, DXL_ID, data, value):
+    def write(self, DXL_ID, data, value):
         """
         Reads a given value in the control table from the specified motor.
 
