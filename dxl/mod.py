@@ -121,7 +121,7 @@ class dxl(object):
                 __ids.append(i)
         return __ids
 
-    def read(self, DXL_ID, data):
+    def __read(self, DXL_ID, data):
         """
         Reads a given value in the control table from the specified motor.
 
@@ -174,16 +174,6 @@ class dxl(object):
         self.__write(DXL_ID, data, value)
 
     @staticmethod
-    def create4ByteArray(bin_value):
-        byte_array = [
-            DXL_LOBYTE(DXL_LOWORD(bin_value)),
-            DXL_HIBYTE(DXL_LOWORD(bin_value)),
-            DXL_LOBYTE(DXL_HIWORD(bin_value)),
-            DXL_HIBYTE(DXL_HIWORD(bin_value)),
-        ]
-        return byte_array
-
-    @staticmethod
     def create2ByteArray(bin_value):
         byte_array = [
             DXL_LOBYTE(DXL_LOWORD(bin_value)),
@@ -205,13 +195,9 @@ class dxl(object):
                 dxl_addparam_result = groupSyncWrite.addParam(
                     k, self.create2ByteArray(v)
                 )
-            elif size == 1:
-                dxl_addparam_result = groupSyncWrite.addParam(
-                    k, self.create1ByteArray(v)
-                )
             else:
                 dxl_addparam_result = groupSyncWrite.addParam(
-                    k, self.create4ByteArray(v)
+                    k, self.create1ByteArray(v)
                 )
             assert dxl_addparam_result, "Group Sync Write Failed"
         dxl_comm_result = groupSyncWrite.txPacket()
@@ -219,9 +205,6 @@ class dxl(object):
 
     def set_torque(self, ids):
         self.__sync_write("Torque Enable", ids)
-
-    def set_speed(self, ids):
-        self.__sync_write("Moving Speed", ids)
 
     def set_goal_position(self, ids):
         """
